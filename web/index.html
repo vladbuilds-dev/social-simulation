@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Слухи в сети — симулятор каскадов</title>
+  <meta name="description" content="Агентная модель: как боты, скептики и фактчекеры решают, затухнет слух или захватит сеть.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='9' cy='20' r='5' fill='%23d9463f'/><circle cx='22' cy='10' r='4' fill='%23d9463f'/><circle cx='24' cy='24' r='3' fill='%23bfc6ce'/><path d='M9 20L22 10M22 10L24 24' stroke='%23889' stroke-width='1.5'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top"><span class="brand-dot" aria-hidden="true"></span>Слухи в сети</a>
+    <nav aria-label="Разделы">
+      <a href="#scenario">Сценарий</a>
+      <a href="#compare">Сравнение</a>
+      <a href="#threshold">Порог</a>
+      <a href="#model">Модель</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- ================================================= живая симуляция -->
+    <section class="hero" aria-labelledby="readout">
+      <div class="hero-text">
+        <p class="eyebrow" id="preset-name">Сценарий: 5% ботов</p>
+        <h1 id="readout" class="readout">Слуху поверили <span class="readout-num" id="readout-num">0%</span> людей</h1>
+        <p class="verdict" id="verdict" aria-live="polite">Шаг 0 из 50</p>
+        <p class="lede">300 аккаунтов, связанных как в соцсети. На каждом шаге активные аккаунты показывают пост соседям, а те решают: поверить, проверить или пройти мимо.</p>
+
+        <div class="knob">
+          <div class="knob-head">
+            <label for="p-share">Склонность к репосту</label>
+            <output id="p-share-out" for="p-share" class="mono">0.18</output>
+          </div>
+          <div class="risk">
+            <div class="risk-track" id="risk-track" aria-hidden="true"></div>
+            <div class="risk-marker" id="risk-marker" hidden><span id="risk-marker-label">порог</span></div>
+            <input type="range" id="p-share" min="0" max="0.8" step="0.01" value="0.18" aria-describedby="risk-caption">
+          </div>
+          <p class="risk-caption" id="risk-caption">Шкала краснеет там, где слух чаще превращается в массовый каскад при текущих настройках.</p>
+        </div>
+
+        <ul class="legend" aria-label="Обозначения">
+          <li><i class="sw sw-unaware"></i>ничего не видел</li>
+          <li><i class="sw sw-seen"></i>видел, не поверил</li>
+          <li><i class="sw sw-rumor"></i>репостит слух</li>
+          <li><i class="sw sw-rumor-soft"></i>верит слуху</li>
+          <li><i class="sw sw-corr"></i>публикует опровержение</li>
+          <li><i class="sw sw-corr-soft"></i>принял опровержение</li>
+          <li><i class="sh sh-square"></i>бот-усилитель</li>
+          <li><i class="sh sh-diamond"></i>бот-фактчекер</li>
+          <li><i class="sh sh-ring"></i>инфлюенсер</li>
+        </ul>
+      </div>
+
+      <div class="stage">
+        <div class="canvas-wrap" id="canvas-wrap">
+          <canvas id="net" role="img" aria-label="Сеть пользователей: цвет узла показывает, что человек думает о слухе"></canvas>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <div class="transport">
+          <button type="button" class="btn btn-ink" id="play" aria-label="Пауза">Пауза</button>
+          <button type="button" class="btn" id="restart">Заново</button>
+          <input type="range" id="scrub" min="0" max="50" step="1" value="0" aria-label="Шаг симуляции">
+          <span class="mono step-label" id="step-label">0 / 50</span>
+          <label class="speed">
+            <span class="visually-hidden">Скорость</span>
+            <select id="speed">
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+            </select>
+          </label>
+        </div>
+        <div class="chart" id="dyn-chart"></div>
+      </div>
+    </section>
+
+    <!-- ================================================= параметры -->
+    <section class="panel" id="scenario" aria-labelledby="scenario-title">
+      <div class="section-head">
+        <h2 id="scenario-title">Сценарий</h2>
+        <div class="presets" role="group" aria-label="Готовые сценарии" id="presets"></div>
+      </div>
+
+      <div class="controls">
+        <fieldset>
+          <legend>Сеть</legend>
+          <div class="seg" data-param="network" role="radiogroup" aria-label="Тип сети">
+            <button type="button" data-value="scale_free">С хабами</button>
+            <button type="button" data-value="small_world">Small-world</button>
+            <button type="button" data-value="random">Случайная</button>
+          </div>
+          <label class="range"><span>Аккаунтов</span><output class="mono"></output>
+            <input type="range" data-param="nNodes" min="100" max="800" step="50"></label>
+          <label class="range"><span>Связей в среднем</span><output class="mono"></output>
+            <input type="range" data-param="avgDegree" min="2" max="12" step="2"></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Люди</legend>
+          <label class="range"><span>Скептики</span><output class="mono"></output>
+            <input type="range" data-param="skepticFraction" data-pct min="0" max="0.6" step="0.01"></label>
+          <label class="range"><span>Инфлюенсеры</span><output class="mono"></output>
+            <input type="range" data-param="influencerFraction" data-pct min="0" max="0.1" step="0.01"></label>
+          <label class="range"><span>Первых распространителей</span><output class="mono"></output>
+            <input type="range" data-param="initialSpreaders" min="0" max="10" step="1"></label>
+          <div class="seg" data-param="seedPlacement" role="radiogroup" aria-label="Кто запускает слух">
+            <button type="button" data-value="random">Запускают случайные</button>
+            <button type="button" data-value="hubs">Запускают популярные</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Боты-усилители</legend>
+          <label class="range"><span>Доля ботов</span><output class="mono"></output>
+            <input type="range" data-param="botFraction" data-pct min="0" max="0.2" step="0.01"></label>
+          <div class="seg" data-param="botPlacement" role="radiogroup" aria-label="Где стоят боты">
+            <button type="button" data-value="random">Случайно</button>
+            <button type="button" data-value="hubs">В хабах</button>
+            <button type="button" data-value="periphery">На периферии</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Боты-фактчекеры</legend>
+          <label class="range"><span>Доля фактчекеров</span><output class="mono"></output>
+            <input type="range" data-param="factcheckFraction" data-pct min="0" max="0.15" step="0.01"></label>
+          <div class="seg" data-param="factcheckPlacement" role="radiogroup" aria-label="Где стоят фактчекеры">
+            <button type="button" data-value="random">Случайно</button>
+            <button type="button" data-value="hubs">В хабах</button>
+            <button type="button" data-value="periphery">На периферии</button>
+          </div>
+          <label class="range"><span>Включаются на шаге</span><output class="mono"></output>
+            <input type="range" data-param="factcheckDelay" min="0" max="20" step="1"></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Прогон</legend>
+          <label class="range"><span>Шагов</span><output class="mono"></output>
+            <input type="range" data-param="nSteps" min="10" max="150" step="5"></label>
+          <div class="seed-row">
+            <span>Случайность <span class="mono" id="seed-out">42</span></span>
+            <button type="button" class="btn" id="reseed">Другой прогон</button>
+          </div>
+          <p class="error" id="error" role="alert" hidden></p>
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- ================================================= сравнение -->
+    <section class="panel" id="compare" aria-labelledby="compare-title">
+      <div class="section-head">
+        <h2 id="compare-title">Сравнить два сценария</h2>
+        <p class="section-note">Один прогон может случайно получиться удачным или неудачным. Поэтому каждый сценарий считается 30 раз с разной случайностью: линия показывает среднее, полоса — разброс ±σ.</p>
+      </div>
+      <div class="ab">
+        <div class="ab-side">
+          <p class="ab-tag"><span class="ab-a">A</span>текущий сценарий</p>
+          <p class="ab-desc" id="a-desc"></p>
+          <p class="ab-tag"><span class="ab-b">B</span>тот же, но:</p>
+          <label class="range"><span>Доля ботов</span><output class="mono"></output>
+            <input type="range" data-b="botFraction" data-pct min="0" max="0.2" step="0.01"></label>
+          <div class="seg" data-b="botPlacement" role="radiogroup" aria-label="B: где стоят боты">
+            <button type="button" data-value="random">Случайно</button>
+            <button type="button" data-value="hubs">В хабах</button>
+            <button type="button" data-value="periphery">На периферии</button>
+          </div>
+          <label class="range"><span>Доля фактчекеров</span><output class="mono"></output>
+            <input type="range" data-b="factcheckFraction" data-pct min="0" max="0.15" step="0.01"></label>
+          <div class="seg" data-b="factcheckPlacement" role="radiogroup" aria-label="B: где стоят фактчекеры">
+            <button type="button" data-value="random">Случайно</button>
+            <button type="button" data-value="hubs">В хабах</button>
+            <button type="button" data-value="periphery">На периферии</button>
+          </div>
+          <label class="range"><span>Скептики</span><output class="mono"></output>
+            <input type="range" data-b="skepticFraction" data-pct min="0" max="0.6" step="0.01"></label>
+        </div>
+        <div class="ab-result">
+          <div class="chart" id="ab-chart"></div>
+          <div class="table-wrap">
+            <table class="ab-table" id="ab-table"></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= порог -->
+    <section class="panel" id="threshold" aria-labelledby="threshold-title">
+      <div class="section-head">
+        <h2 id="threshold-title">Где переломная точка</h2>
+        <p class="section-note">Меняем только склонность к репосту, остальное берём из сценария. Для каждой точки 20 прогонов в трёх типах сети. Ниже порога слух почти всегда гаснет, выше почти всегда разрастается.</p>
+      </div>
+      <div class="threshold-run">
+        <button type="button" class="btn btn-ink" id="sweep">Построить кривые</button>
+        <span class="mono progress" id="sweep-progress" aria-live="polite"></span>
+      </div>
+      <div class="two-charts" id="sweep-charts" hidden>
+        <figure>
+          <figcaption>Сколько людей в среднем поверило слуху</figcaption>
+          <div class="chart" id="sweep-reach"></div>
+        </figure>
+        <figure>
+          <figcaption>Как часто случается массовый каскад (&gt; 20%)</figcaption>
+          <div class="chart" id="sweep-prob"></div>
+        </figure>
+      </div>
+      <p class="sweep-summary" id="sweep-summary"></p>
+    </section>
+
+    <!-- ================================================= модель -->
+    <section class="panel model" id="model" aria-labelledby="model-title">
+      <div class="section-head">
+        <h2 id="model-title">Как устроена модель</h2>
+      </div>
+      <div class="model-grid">
+        <div>
+          <h3>Правила одного шага</h3>
+          <ol class="rules">
+            <li>Каждый активный аккаунт показывает свой пост соседям.</li>
+            <li>Сосед замечает пост с вероятностью <span class="mono">p_exposure</span>.</li>
+            <li>Увидев слух, человек может проверить его (<span class="mono">p_verify</span>): тогда он принимает опровержение и публикует его. Если не проверил, то с вероятностью <span class="mono">p_share</span> верит и репостит.</li>
+            <li>Опровержение принимают только те, кто уже видел слух, и репостят его вдвое реже, чем сам слух.</li>
+            <li>Если за шаг пришли и слух, и опровержение, побеждает опровержение.</li>
+            <li>Люди выгорают через несколько шагов активности. Боты не выгорают и не меняют позицию.</li>
+          </ol>
+          <p class="fine">Все изменения применяются одновременно, так что порядок обхода на результат не влияет. Охват считается только по людям, боты в него не входят.</p>
+        </div>
+        <div>
+          <h3>Кто есть в сети</h3>
+          <div class="table-wrap">
+            <table class="types">
+              <thead><tr><th scope="col">Тип</th><th scope="col">Замечает</th><th scope="col">Репостит</th><th scope="col">Проверяет</th><th scope="col">Активен</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Обычный пользователь</th><td>35%</td><td>p_share</td><td>4%</td><td>3 шага</td></tr>
+                <tr><th scope="row">Скептик</th><td>30%</td><td>p_share × 0.15</td><td>45%</td><td>2 шага</td></tr>
+                <tr><th scope="row">Инфлюенсер</th><td>45%</td><td>p_share × 1.4</td><td>5%</td><td>4 шага</td></tr>
+                <tr><th scope="row">Бот-усилитель</th><td>—</td><td>всегда слух</td><td>—</td><td>всегда</td></tr>
+                <tr><th scope="row">Бот-фактчекер</th><td>—</td><td>всегда опровержение</td><td>—</td><td>с задержкой</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fine">Инфлюенсеры — самые связные люди в сети, это не боты. Сети: Barabási–Albert (с хабами), Watts–Strogatz (small-world), Erdős–Rényi (случайная).</p>
+        </div>
+      </div>
+
+      <div class="findings">
+        <h3>Что показали эксперименты</h3>
+        <p class="fine">300 аккаунтов, по 30 прогонов на точку. Python-версия модели, <span class="mono">experiments.py</span>.</p>
+        <dl>
+          <div><dt>Без ботов слух почти всегда гаснет</dt><dd>4% охвата. С 5% ботов-усилителей — 22%, пик активных репостов вырастает вчетверо.</dd></div>
+          <div><dt>Важнее не число ботов, а их место</dt><dd>Одни и те же 3% ботов: случайно — 18% охвата, в хабах — 40%, и каскад случается в каждом прогоне.</dd></div>
+          <div><dt>Фактчекинг работает, когда он ранний</dt><dd>5% фактчекеров в хабах режут охват с 22% до 11%, если включаются сразу, и только до 16%, если на шестом шаге.</dd></div>
+          <div><dt>Порог зависит от структуры сети</dt><dd>Каскад в половине прогонов: при p_share ≈ 0.275 в сети с хабами и в случайной, при ≈ 0.375 в small-world.</dd></div>
+        </dl>
+      </div>
+
+      <p class="limits"><strong>Ограничения.</strong> Модель иллюстративная. Она не прогнозирует поведение конкретной соцсети или людей: параметры подобраны вручную и не калибровались на реальных данных. Модель сравнивает механизмы — как структура связей, боты, скептики и фактчекинг меняют коллективный итог. Бот здесь — абстрактный агент с фиксированным поведением, а не инструкция по манипуляции.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Агентная модель распространения слухов · Python + JavaScript</span>
+    <span class="mono">Каскад — поверили &gt; 20% людей</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
