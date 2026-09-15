@@ -1,0 +1,10 @@
+# На Vercel нужна только статическая страница из web/.
+# Python-часть не загружаем, чтобы Vercel не принял app.py/requirements.txt за Python-бэкенд.
+.venv
+__pycache__
+*.py
+requirements.txt
+run.sh
+results
+tools
+.streamlit
