@@ -16,8 +16,8 @@ export const LEVELS = [
     brief: "Боты заняли самые людные места города. Слух разойдётся быстро.",
     tip: "Сначала заглуши бота на самой большой площади.",
     scenario: { nNodes: 150, network: "scale_free", avgDegree: 6, pShare: 0.22, botFraction: 0.03, botPlacement: "hubs", nSteps: 40 },
-    tools: { factchecker: 5, ban: 3 },
-    stars: [0.2, 0.14, 0.1],
+    tools: { factchecker: 6, ban: 3 },
+    stars: [0.2, 0.16, 0.12],
   },
   {
     id: "storm",
