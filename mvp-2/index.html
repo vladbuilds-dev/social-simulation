@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Слух в городе — пиксельная игра про дезинформацию</title>
+  <meta name="description" content="Боты пустили слух по пиксельному городу. Нанимай фактчекеров, глуши ботов и не дай слуху захватить больше 20% жителей.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><rect width='8' height='8' fill='%231a1c2c'/><rect x='1' y='2' width='6' height='4' fill='%23e43b44'/><rect x='2' y='3' width='1' height='1' fill='%23f4f4f4'/><rect x='5' y='3' width='1' height='1' fill='%23f4f4f4'/><rect x='3' y='4' width='2' height='1' fill='%23f4f4f4'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wrap">
+    <header class="masthead">
+      <p class="kicker"><a href="../">← MVP 1 / MVP 2</a> · агентная модель в виде игры</p>
+      <h1>Слух в городе</h1>
+    </header>
+
+    <!-- ===================================== игра -->
+    <section class="game" aria-label="Игра">
+      <div class="hud" id="hud" hidden>
+        <div class="hud-left">
+          <p class="hud-title" id="hud-title">Тихий квартал</p>
+          <p class="hud-clock" id="hud-clock">День 1 · 20:00</p>
+        </div>
+        <div class="meter" aria-live="off">
+          <div class="meter-head">
+            <span>Поверили слуху</span>
+            <span class="meter-value" id="meter-value">0%</span>
+          </div>
+          <div class="meter-bar" id="meter-bar">
+            <div class="meter-fill" id="meter-fill"></div>
+            <div class="meter-line" style="left:40%"><span>20%</span></div>
+          </div>
+          <div class="meter-stars" id="meter-stars"></div>
+        </div>
+        <div class="tools" id="tools" aria-label="Что у тебя есть">
+          <div class="tool" data-tool="factchecker">
+            <span class="tool-icon tool-fc" aria-hidden="true"></span>
+            <span class="tool-text"><span class="tool-name">Фактчекеры</span><span class="tool-count" data-count="factchecker">4</span></span>
+          </div>
+          <div class="tool" data-tool="ban">
+            <span class="tool-icon tool-ban" aria-hidden="true"></span>
+            <span class="tool-text"><span class="tool-name">Глушилки</span><span class="tool-count" data-count="ban">1</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen" id="screen">
+        <canvas id="view" aria-label="Пиксельный город: жители передают друг другу слух и опровержение"></canvas>
+        <div class="tip" id="tip" hidden></div>
+        <p class="toast" id="toast" role="status" hidden></p>
+
+        <!-- меню -->
+        <div class="overlay" id="menu">
+          <div class="panel-box menu-box">
+            <p class="menu-lead">Ночью боты пустили по городу слух. Каждый час жители пишут знакомым: кто-то верит и пересылает дальше, кто-то проверяет. Твоя задача — чтобы к утру слуху поверили меньше <b>20%</b> жителей.</p>
+            <ul class="levels" id="levels"></ul>
+            <button type="button" class="btn btn-ghost" id="to-sandbox">Песочница: свои правила</button>
+          </div>
+        </div>
+
+        <!-- брифинг -->
+        <div class="overlay" id="brief" hidden>
+          <div class="panel-box brief-box">
+            <p class="brief-level" id="brief-level">Уровень 1</p>
+            <h2 id="brief-title">Тихий квартал</h2>
+            <p id="brief-text"></p>
+            <ul class="brief-tools">
+              <li><span class="tool-icon tool-fc" aria-hidden="true"></span><span><b>Фактчекер</b> — нажми на жителя, и он всю игру будет рассылать опровержение.</span></li>
+              <li><span class="tool-icon tool-ban" aria-hidden="true"></span><span><b>Заглушить бота</b> — нажми на робота, и он замолчит.</span></li>
+            </ul>
+            <p class="brief-note">Время стоит, пока ты не нажмёшь «Старт», — можно спокойно осмотреться. Действовать можно и на ходу.</p>
+            <div class="row">
+              <button type="button" class="btn" id="brief-go">Осмотреться</button>
+              <button type="button" class="btn btn-ghost" id="brief-back">К уровням</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- итог -->
+        <div class="overlay" id="result" hidden>
+          <div class="panel-box result-box">
+            <p class="result-stars" id="result-stars" aria-label=""></p>
+            <h2 id="result-title">Город устоял</h2>
+            <div class="compare">
+              <div class="compare-row">
+                <span>С тобой</span>
+                <div class="compare-bar"><i id="cmp-you"></i></div>
+                <b id="cmp-you-val">0%</b>
+              </div>
+              <div class="compare-row">
+                <span>Без тебя</span>
+                <div class="compare-bar"><i id="cmp-base" class="is-base"></i></div>
+                <b id="cmp-base-val">0%</b>
+              </div>
+            </div>
+            <p id="result-saved"></p>
+            <ul class="result-notes" id="result-notes"></ul>
+            <div class="row">
+              <button type="button" class="btn" id="res-next">Следующий уровень</button>
+              <button type="button" class="btn btn-ghost" id="res-retry">Ещё раз</button>
+              <button type="button" class="btn btn-ghost" id="res-menu">К уровням</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls" id="controls" hidden>
+        <button type="button" class="btn" id="play">Старт</button>
+        <div class="speed" role="group" aria-label="Скорость">
+          <button type="button" data-speed="1" aria-pressed="true">×1</button>
+          <button type="button" data-speed="2" aria-pressed="false">×2</button>
+          <button type="button" data-speed="4" aria-pressed="false">×4</button>
+        </div>
+        <input type="range" id="scrub" min="0" max="40" value="0" aria-label="Час" hidden>
+        <label class="check"><input type="checkbox" id="edges"> Показать знакомства</label>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-ghost" id="skip">До утра ⏭</button>
+        <button type="button" class="btn btn-ghost" id="restart">Заново</button>
+        <button type="button" class="btn btn-ghost" id="back">Меню</button>
+      </div>
+
+      <!-- песочница -->
+      <div class="sandbox" id="sandbox" hidden>
+        <label class="field"><span>Жителей</span><output></output>
+          <input type="range" data-param="nNodes" min="60" max="200" step="10"></label>
+        <label class="field"><span>Склонность к репосту</span><output></output>
+          <input type="range" data-param="pShare" data-fixed="2" min="0" max="0.6" step="0.01"></label>
+        <label class="field"><span>Скептики</span><output></output>
+          <input type="range" data-param="skepticFraction" data-pct min="0" max="0.5" step="0.01"></label>
+        <label class="field"><span>Боты</span><output></output>
+          <input type="range" data-param="botFraction" data-pct min="0" max="0.15" step="0.01"></label>
+        <div class="field"><span>Где боты</span>
+          <div class="seg" data-param="botPlacement">
+            <button type="button" data-value="random">везде</button>
+            <button type="button" data-value="hubs">на площадях</button>
+            <button type="button" data-value="periphery">на окраинах</button>
+          </div>
+        </div>
+        <label class="field"><span>Роботы-фактчекеры</span><output></output>
+          <input type="range" data-param="factcheckFraction" data-pct min="0" max="0.15" step="0.01"></label>
+        <div class="field"><span>Где фактчекеры</span>
+          <div class="seg" data-param="factcheckPlacement">
+            <button type="button" data-value="random">везде</button>
+            <button type="button" data-value="hubs">на площадях</button>
+            <button type="button" data-value="periphery">на окраинах</button>
+          </div>
+        </div>
+        <label class="field"><span>Фактчекеры выходят в час</span><output></output>
+          <input type="range" data-param="factcheckDelay" min="0" max="15" step="1"></label>
+        <div class="field">
+          <span>Город</span>
+          <button type="button" class="btn btn-ghost" id="new-town">Другой город</button>
+        </div>
+        <p class="error" id="sb-error" role="alert" hidden></p>
+      </div>
+
+      <ul class="legend" aria-label="Обозначения">
+        <li><i class="sw" style="background:var(--unaware)"></i>ничего не слышал</li>
+        <li><i class="sw" style="background:var(--seen)"></i>слышал, не поверил</li>
+        <li><i class="sw" style="background:var(--rumor)"></i>пересылает слух</li>
+        <li><i class="sw" style="background:var(--rumor-soft)"></i>верит слуху</li>
+        <li><i class="sw" style="background:var(--corr)"></i>рассылает опровержение</li>
+        <li><i class="sw" style="background:var(--corr-soft)"></i>знает правду</li>
+        <li><i class="ico ico-bot"></i>бот</li>
+        <li><i class="ico ico-plaza"></i>площадь — у жителя много знакомых</li>
+      </ul>
+    </section>
+
+    <!-- ===================================== объяснение -->
+    <section class="explain">
+      <h2>Что на самом деле происходит</h2>
+      <p class="explain-lead">Это не мультик поверх графика, а та же агентная модель, что в первой версии проекта. Город — просто другой способ её показать.</p>
+      <div class="map-table">
+        <div><dt>Житель</dt><dd>агент сети</dd></div>
+        <div><dt>Знакомые</dt><dd>связи в графе Барабаши–Альберт</dd></div>
+        <div><dt>Площадь</dt><dd>хаб: у жителя в разы больше связей, чем у соседей</dd></div>
+        <div><dt>Письмо</dt><dd>репост: сосед поверил и понёс дальше</dd></div>
+        <div><dt>Жёлтая точка</dt><dd>сосед увидел пост, но не поверил</dd></div>
+        <div><dt>Час</dt><dd>один шаг симуляции</dd></div>
+        <div><dt>Робот</dt><dd>бот-усилитель: всегда шлёт слух, не устаёт</dd></div>
+        <div><dt>Житель в кепке</dt><dd>фактчекер: всегда шлёт опровержение</dd></div>
+        <div><dt>Житель в очках</dt><dd>скептик: чаще проверяет, реже верит</dd></div>
+      </div>
+      <p>Каждый час активный житель пишет всем знакомым. Знакомый замечает письмо с вероятностью 35%. Дальше он либо проверяет слух (4%, у скептиков 45%) и начинает рассылать опровержение, либо верит и пересылает (вероятность — «склонность к репосту»). Через три часа люди устают и замолкают, а боты — нет. Опровержение принимают только те, кто уже слышал слух, и пересылают его вдвое реже.</p>
+      <p>Уровни собраны так, чтобы игрок сам пришёл к выводам исследования: <b>место важнее количества</b> — бот на площади опаснее десяти на окраине, а фактчекер там же полезнее; <b>действовать надо рано</b> — к третьему часу слух уже не остановить. «Без тебя» в итогах — тот же город с той же случайностью, но без твоих действий.</p>
+      <p class="fine">Модель иллюстративная: параметры подобраны вручную и не калибровались на данных реальных соцсетей. Боты здесь — абстрактные агенты для изучения устойчивости сети, а не инструкция.</p>
+    </section>
+  </main>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

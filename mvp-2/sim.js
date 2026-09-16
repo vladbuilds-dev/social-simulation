@@ -285,6 +285,8 @@ export class Simulation {
 
     this.history = [this.metrics()];
     this.events = [[]];
+    this.hired = new Set();
+    this.banned = new Set();
     this.snapshots = record ? [this.snapshot()] : null;
   }
 
@@ -298,6 +300,7 @@ export class Simulation {
     this.message[v] = Opinion.CORRECTION;
     this.active[v] = 1;
     this.lifetime[v] = Infinity;
+    this.hired.add(v);
     this.refreshLast();
     return true;
   }
@@ -306,6 +309,7 @@ export class Simulation {
   banBot(v) {
     if (this.type[v] !== T.AMP_BOT || !this.active[v]) return false;
     this.active[v] = 0;
+    this.banned.add(v);
     this.refreshLast();
     return true;
   }

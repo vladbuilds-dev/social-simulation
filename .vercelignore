@@ -1,5 +1,5 @@
-# На Vercel нужна только статическая страница из web/.
-# Python-часть не загружаем, чтобы Vercel не принял app.py/requirements.txt за Python-бэкенд.
+# На Vercel выкладываем только статические страницы: index.html (выбор версии),
+# mvp-1/web/ и mvp-2/. Python-часть не загружаем, чтобы Vercel не принял её за бэкенд.
 .venv
 __pycache__
 *.py
@@ -8,3 +8,5 @@ run.sh
 results
 tools
 .streamlit
+*.txt
+mvp-1/vercel.json

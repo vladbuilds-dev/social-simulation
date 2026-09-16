@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": ".",
+  "cleanUrls": true,
+  "trailingSlash": true,
+  "redirects": [
+    { "source": "/mvp-1", "destination": "/mvp-1/web/", "permanent": false },
+    { "source": "/mvp1", "destination": "/mvp-1/web/", "permanent": false },
+    { "source": "/mvp2", "destination": "/mvp-2/", "permanent": false }
+  ]
+}

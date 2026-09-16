@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Слухи в сети — выбор версии</title>
+  <meta name="description" content="Агентная модель распространения слухов: исследовательский симулятор и пиксельная игра.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='9' cy='20' r='5' fill='%23e43b44'/><circle cx='22' cy='10' r='4' fill='%23e43b44'/><circle cx='24' cy='24' r='3' fill='%2394b0c2'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #14161f; --card: #1d2030; --line: #2c3147; --text: #eceef4; --muted: #8d95ab; --red: #e43b44; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text); font: 400 16px/1.5 "Geologica", system-ui, sans-serif; padding-inline: 16px; padding-block: 40px; }
+    main { width: min(920px, 100%); }
+    h1 { margin: 0 0 8px; font-weight: 800; font-size: clamp(30px, 5vw, 48px); letter-spacing: -0.03em; line-height: 1.05; }
+    .lead { margin: 0 0 32px; color: var(--muted); max-width: 56ch; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+    a.card { display: grid; gap: 10px; padding: 22px; min-height: 230px; align-content: start; text-decoration: none; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 14px; transition: transform 160ms ease, border-color 160ms ease; }
+    a.card:hover { transform: translateY(-3px); border-color: var(--muted); }
+    a.card:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
+    .tag { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .card h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+    .card p { margin: 0; color: var(--muted); }
+    .go { margin-top: auto; padding-top: 12px; font-weight: 800; }
+    .v2 { background: #1a1c2c; border-color: #566c86; }
+    .v2 h2 { font: 400 18px/1.4 "Press Start 2P", monospace; text-shadow: 2px 2px 0 #b13e53; }
+    .v2 .go { font: 400 11px/1 "Press Start 2P", monospace; color: #ffcd75; }
+    .dots { height: 34px; background:
+      radial-gradient(circle, #94b0c2 0 4px, transparent 5px) 0 50% / 26px 34px repeat-x; opacity: .6; }
+    .dots-red { height: 34px; background:
+      radial-gradient(circle, var(--red) 0 4px, transparent 5px) 0 50% / 26px 34px repeat-x; width: 40%; margin-top: -34px; }
+    .pix { height: 34px; image-rendering: pixelated; background:
+      linear-gradient(90deg, #e43b44 0 10px, transparent 10px 22px, #a7f070 22px 32px, transparent 32px 44px, #94b0c2 44px 54px, transparent 54px 66px, #ffcd75 66px 76px, transparent 76px 88px) 0 12px / 88px 10px repeat-x; }
+    footer { margin-top: 28px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Слухи в сети</h1>
+    <p class="lead">Агентная модель: как боты, скептики и фактчекеры решают, затухнет слух или захватит сеть. Одна модель, две версии — выбери, с какой начать.</p>
+    <div class="grid">
+      <a class="card" href="/mvp-1/web/">
+        <span class="tag">MVP 1 · исследование</span>
+        <h2>Симулятор каскадов</h2>
+        <div aria-hidden="true"><div class="dots"></div><div class="dots-red"></div></div>
+        <p>Граф из 300 аккаунтов, настройки модели, сравнение сценариев A/B и кривые переломной точки.</p>
+        <span class="go">Открыть симулятор →</span>
+      </a>
+      <a class="card v2" href="/mvp-2/">
+        <span class="tag">MVP 2 · игра</span>
+        <h2>Слух в городе</h2>
+        <div class="pix" aria-hidden="true"></div>
+        <p>Та же модель в виде пиксельного города. Нанимай фактчекеров, глуши ботов и не дай слуху захватить 20% жителей.</p>
+        <span class="go">Играть →</span>
+      </a>
+    </div>
+    <footer>Модель иллюстративная и не прогнозирует поведение реальных соцсетей.</footer>
+  </main>
+</body>
+</html>

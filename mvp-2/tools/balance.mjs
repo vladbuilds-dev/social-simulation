@@ -7,7 +7,7 @@ const RUNS = 60;
 const pct = (x) => (x * 100).toFixed(1).padStart(5) + "%";
 
 function play(level, seed, strategy) {
-  const sim = new Simulation({ ...level.scenario, seed }, { record: false });
+  const sim = new Simulation({ ...level.scenario, seed }, { record: false }); // seed перекрывает сид уровня
   const n = sim.net.n;
   const byDeg = [...Array(n).keys()].sort((a, b) => sim.net.degree[b] - sim.net.degree[a]);
   let fc = level.tools.factchecker;
